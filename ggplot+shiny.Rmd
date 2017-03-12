@@ -1,0 +1,347 @@
+---
+title: "Interactive Data Visualization in R"
+author: "Lingge Li"
+date: "3/20/2016"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Packages
+
+ggplot 
+
+- general data visualization package
+
+ggmap
+
+- built on top of ggplot for maps
+
+shiny
+
+- R based web framework
+
+## Motivating example
+
+http://www.calands.org/map
+
+## Layered grammar of graphics
+
+- ggplot2 follows a specific grammar of graphics
+
+\includegraphics[width=300pt]{layer.png}
+
+*Example taken from Hadley Wickham's book*
+
+http://vita.had.co.nz/papers/layered-grammar.pdf
+
+## How to make a plot
+
+- Geometric objects (geom)
+- Aesthetic mapping (aes)
+- Statistical transformation (stat)
+- Scales and coordinate system
+
+## Geoms
+
+- Wide range of geometric objects from points to complex shapes
+
+- geom_point, geom_line, geom_polygon...
+
+- Multiple geometric objects on the same plot with +
+
+
+## Aesthetics
+
+- Coordinate positions (always needed)
+
+- Colour, fill, shape, size...
+
+## Data + mapping
+
+- aes() maps a dataframe to geom
+
+- Each geom can have its own mapping
+
+```{r echo=TRUE, eval=FALSE}
+geom_point(data, aes(x, y))
+```
+
+## Points
+
+```{r echo=FALSE, eval=TRUE}
+library(ggplot2)
+x <- c(1, 2, 3, 4, 2.5)
+y <- c(3, 0, 1, 4, 4)
+variable <- c(1, 2, 1, 2, 2)
+example <- data.frame(x, y, variable)
+```
+
+```{r echo=TRUE, eval=TRUE, fig.width=4, fig.height=2, fig.align='center'}
+ggplot(data=example) +
+  geom_point(aes(x=x, y=y, colour=as.factor(variable)))
+```
+
+## Shape
+
+```{r echo=TRUE, eval=TRUE, fig.width=4, fig.height=2, fig.align='center'}
+ggplot(data=example) +
+  geom_point(aes(x=x, y=y, colour=as.factor(variable))) +
+  geom_polygon(aes(x=x, y=y), colour='black', fill=NA)
+```
+
+## Polygons
+
+```{r echo=FALSE, eval=TRUE}
+x <- c(5, 6, 4)
+y <- c(4, 3, 1)
+variable <- c(3, 3, 3)
+triangle <- data.frame(x, y, variable)
+```
+
+```{r echo=TRUE, eval=TRUE, fig.width=4, fig.height=2, fig.align='center'}
+example$group <- 1
+triangle$group <- 2
+both <- rbind(example, triangle)
+ggplot(data=both) +
+  geom_point(aes(x=x, y=y, colour=as.factor(variable))) +
+  geom_polygon(aes(x=x, y=y, group=group), colour='black', fill=NA)
+```
+
+## States dataframe
+
+```{r echo=TRUE, eval=TRUE, message=FALSE}
+library(ggmap)
+library(maps)
+
+states <- map_data('state')
+head(states)
+```
+
+## USA
+
+```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
+ggplot(data=states) + 
+  geom_polygon(aes(x=long, y=lat, group=group, fill=region), show.legend=FALSE)
+```
+
+## California
+
+```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=3, fig.height=3, fig.align='center'}
+california <- states[states$region == 'california', ]
+ggplot(data=california) + 
+  geom_polygon(aes(x=long, y=lat), fill='orange', color='red')
+```
+
+## Custom scale
+
+```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
+ggplot(data=california) + 
+  geom_polygon(aes(x=long, y=lat), fill='orange', color='red') +
+  scale_x_continuous(limits=c(-125, -110)) +
+  scale_y_continuous(breaks=c(34, 37), labels=c('dude', 'hella'))
+```
+
+## Details
+
+- Theme 
+
+- http://docs.ggplot2.org/current/theme.html
+
+## ggmap
+
+https://github.com/dkahle/ggmap
+
+## get_map
+
+```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
+cali <- get_googlemap(center=c(lon=-120, lat=37.5), maptype='satellite', zoom=6)
+ggmap(cali)
+```
+
+## Shapefile
+
+```{r echo=TRUE, eval=FALSE}
+setwd('/Users/linggeli/Downloads/CAPD')
+CAPD <- readOGR('.', 'CPAD_2016b1_SuperUnits')
+CAPD <- spTransform(CAPD, CRS("+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
+proj4string(CAPD) <- CRS("+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+state <- CAPD[CAPD$MNG_AG_LEV == 'State', ]
+state <- fortify(state)
+state.low <- unique(data.frame(long=round(state$long, 2), lat=round(state$lat, 2), group=state$group))
+```
+
+## Protected areas
+
+```{r echo=FALSE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
+load('/Users/linggeli/Downloads/CAPD/protected.Rda')
+ggmap(cali) + 
+  geom_polygon(data=protected, aes(x=long, y=lat, group=group, fill=level), colour='NA', alpha=0.8) +
+  scale_fill_manual(values=c('Federal'='green', 'State'='orange')) +
+  labs(title='Protected Lands in California') + 
+  theme(legend.position=c(0.2, 0.2)) +
+  theme(plot.title=element_text(hjust=0.5))
+```
+
+## What is Shiny
+
+- A framework for building web applications
+
+- Best for interactive data visualization
+
+- Apps for exploratory analysis
+
+http://shiny.datascience.uci.edu/UCIDataScienceInitiative/ClimateActionShiny/
+
+http://shiny.datascience.uci.edu/uciMetropolitanFutures/employment_centers/
+
+## Server and UI
+
+- ui.R has everything you see
+
+input widgets, plots, tables...
+
+- server.R does the work
+
+```{r echo=TRUE, eval=FALSE}
+shinyServer(function(input, output) {
+  
+})
+
+shinyUI(fluidPage(
+  
+))
+```
+
+## Input
+
+- Input handled by specific widgets
+
+- Each input has an id
+
+- Access input value with input$id
+
+http://shiny.rstudio.com/gallery/widget-gallery.html
+
+## Output
+
+- Output rendered in server with output$id
+
+- Then displayed in ui
+
+```{r echo=TRUE, eval=FALSE}
+library(shiny)
+shinyServer(function(input, output) {
+  output$histogram <- renderPlot({
+    hist(faithful$eruptions)
+  })
+})
+
+shinyUI(fluidPage(
+  plotOutput(outputId='histogram')
+))
+```
+
+## Several types of output
+
+- plotOutput (imageOutput)
+- tableOutput (dataTableOutput)
+- textOutput (html)
+- verbatimTextOutput (console)
+- htmlOutput (uiOutput)
+
+## Reactive environment
+
+- Triggered when input changes
+
+- Output changes accordingly
+
+- Rendering functions reactive
+
+## Example
+
+```{r echo=TRUE, eval=FALSE}
+library(shiny)
+library(ggplot2)
+library(ggmap)
+
+shinyServer(function(input, output) {
+  
+  load('/Users/linggeli/Downloads/CAPD/parks.Rda')
+   
+  output$distPlot <- renderPlot({
+    cali <- get_googlemap(center=c(lon=-120, lat=37.5), maptype='hybrid', zoom=6)
+    ggmap(cali) +
+      geom_polygon(data=parks, aes(x=long, y=lat, group=group), colour='NA', fill='green', alpha=0.8)
+  })
+  
+})
+```
+
+```{r echo=TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  plotOutput('distPlot', height='640px')
+))
+```
+
+## Slide to zoom
+
+```{r echo=TRUE, eval=FALSE}
+shinyUI(fluidPage(
+  sliderInput('res', label='Zoom', min=6, max=9, value=6),
+  plotOutput('distPlot', height='640px')
+))
+```
+
+```{r echo=TRUE, eval=FALSE}
+output$distPlot <- renderPlot({
+    cali <- get_googlemap(center=c(lon=-120, lat=37.5), maptype='hybrid', zoom=input$res)
+    ggmap(cali) +
+      geom_polygon(data=parks, aes(x=long, y=lat, group=group), colour='NA', fill='green', alpha=0.8)
+  })
+```
+
+## Double click to move
+
+```{r echo=TRUE, eval=FALSE}
+location <- reactiveValues(x=-120, y=37.5)
+  
+  observeEvent(input$plot_dblclick, {
+    current <- input$plot_dblclick
+    location$x <- current$x
+    location$y <- current$y
+  })
+```
+
+## Layout
+
+- Fluid grid layout (similar to bootstrap)
+
+- 12 columns every row
+
+- Tabset
+
+\includegraphics[width=300pt]{grid.png}
+
+## Other packages
+
+- Widgets for Javascript data visualization
+
+http://www.htmlwidgets.org/
+
+## Resources
+
+- Documentation 
+
+http://docs.ggplot2.org/current/
+
+- Gallery with source code
+
+http://shiny.rstudio.com/gallery/
+
+- Cheatsheets
+
+https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf
+http://shiny.rstudio.com/images/shiny-cheatsheet.pdf
