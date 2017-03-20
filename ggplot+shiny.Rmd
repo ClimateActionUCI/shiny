@@ -135,54 +135,16 @@ ggplot(data=california) +
   geom_polygon(aes(x=long, y=lat), fill='orange', color='red')
 ```
 
-## Custom scale
+## Mediterranean grass
+
+```{r echo=FALSE, eval=TRUE}
+load('/Users/linggeli/Downloads/CAPD/grass.Rda')
+```
 
 ```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
 ggplot(data=california) + 
-  geom_polygon(aes(x=long, y=lat), fill='orange', color='red') +
-  scale_x_continuous(limits=c(-125, -110)) +
-  scale_y_continuous(breaks=c(34, 37), labels=c('dude', 'hella'))
-```
-
-## Details
-
-- Theme 
-
-- http://docs.ggplot2.org/current/theme.html
-
-## ggmap
-
-https://github.com/dkahle/ggmap
-
-## get_map
-
-```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
-cali <- get_googlemap(center=c(lon=-120, lat=37.5), maptype='satellite', zoom=6)
-ggmap(cali)
-```
-
-## Shapefile
-
-```{r echo=TRUE, eval=FALSE}
-setwd('/Users/linggeli/Downloads/CAPD')
-CAPD <- readOGR('.', 'CPAD_2016b1_SuperUnits')
-CAPD <- spTransform(CAPD, CRS("+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
-proj4string(CAPD) <- CRS("+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-state <- CAPD[CAPD$MNG_AG_LEV == 'State', ]
-state <- fortify(state)
-state.low <- unique(data.frame(long=round(state$long, 2), lat=round(state$lat, 2), group=state$group))
-```
-
-## Protected areas
-
-```{r echo=FALSE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
-load('/Users/linggeli/Downloads/CAPD/protected.Rda')
-ggmap(cali) + 
-  geom_polygon(data=protected, aes(x=long, y=lat, group=group, fill=level), colour='NA', alpha=0.8) +
-  scale_fill_manual(values=c('Federal'='green', 'State'='orange')) +
-  labs(title='Protected Lands in California') + 
-  theme(legend.position=c(0.2, 0.2)) +
-  theme(plot.title=element_text(hjust=0.5))
+  geom_polygon(aes(x=long, y=lat), fill='orange', colour='red') +
+  geom_point(data=grass, aes(x=long, y=lat), colour='darkgreen')
 ```
 
 ## geom_raster
@@ -226,6 +188,47 @@ ggplot() +
   geom_contour(data=NED.df, aes(x=lon, y=lat, z=elevation), size=0.5, bins=10) +
   scale_fill_gradient2(low='blue', mid='lightblue', high='green', midpoint=7)
 ```
+
+## ggmap
+
+https://github.com/dkahle/ggmap
+
+## get_map
+
+```{r echo=TRUE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
+cali <- get_googlemap(center=c(lon=-120, lat=37.5), maptype='satellite', zoom=6)
+ggmap(cali)
+```
+
+## Shapefile
+
+```{r echo=TRUE, eval=FALSE}
+setwd('/Users/linggeli/Downloads/CAPD')
+CAPD <- readOGR('.', 'CPAD_2016b1_SuperUnits')
+CAPD <- spTransform(CAPD, CRS("+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"))
+proj4string(CAPD) <- CRS("+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+state <- CAPD[CAPD$MNG_AG_LEV == 'State', ]
+state <- fortify(state)
+state.low <- unique(data.frame(long=round(state$long, 2), lat=round(state$lat, 2), group=state$group))
+```
+
+## Protected areas
+
+```{r echo=FALSE, eval=TRUE, message=FALSE, fig.width=4, fig.height=3, fig.align='center'}
+load('/Users/linggeli/Downloads/CAPD/protected.Rda')
+ggmap(cali) + 
+  geom_polygon(data=protected, aes(x=long, y=lat, group=group, fill=level), colour='NA', alpha=0.8) +
+  scale_fill_manual(values=c('Federal'='green', 'State'='orange')) +
+  labs(title='Protected Lands in California') + 
+  theme(legend.position=c(0.2, 0.2)) +
+  theme(plot.title=element_text(hjust=0.5))
+```
+
+## Details
+
+- Theme 
+
+- http://docs.ggplot2.org/current/theme.html
 
 ## What is Shiny
 
