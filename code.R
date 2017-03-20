@@ -6,7 +6,7 @@ library(rgbif)
 occ_count(taxonKey=3106632, georeferenced=TRUE)
 
 # get occurence data
-occurences <- occ_search(taxonKey=3106632, limit=2000, return='data')
+occurences <- occ_search(taxonKey=3106632, limit=1000, return='data')
 
 # locations of occurences
 locations <- cbind(occurences$decimalLatitude, occurences$decimalLongitude)
@@ -14,7 +14,7 @@ locations <- cbind(occurences$decimalLatitude, occurences$decimalLongitude)
 locations <- locations[!is.na(locations[, 1]), ]
 
 # inside california
-locations <- locations[locations[, 2] > -120 & locations[ ,2] < -114, ]
+locations <- locations[locations[, 2] > -120 & locations[, 2] < -114, ]
 locations <- locations[locations[, 1] > 32.4, ]
 
 library(ggplot2)
@@ -30,8 +30,8 @@ grass <- data.frame(lat=locations[, 1], long=locations[, 2])
 
 # plot mediterranean grass occurences
 ggplot(data=california) + 
-  geom_polygon(aes(x=long, y=lat), fill='orange', color='red') +
-  geom_point(data=grass, aes(x=long, y=lat))
+  geom_polygon(aes(x=long, y=lat), fill='orange', colour='red') +
+  geom_point(data=grass, aes(x=long, y=lat), colour='darkgreen')
 
 ############################### SHAPEFILE ###############################
 library(rgdal)
@@ -97,6 +97,16 @@ p <- ggmap(cali) +
   labs(title='Protected Lands in California') + 
   theme(legend.position=c(0.2, 0.2)) +
   theme(plot.title=element_text(hjust=0.5))
+
+############################### NATIONAL PARKS ###############################
+parks <- CAPD[grepl('National Park', CAPD$PARK_NAME), ]
+parks <- fortify(parks)
+
+parks <- unique(data.frame(long=round(parks$long, 2), lat=round(parks$lat, 2), group=parks$group))
+
+cali <- get_googlemap(center=c(lon=-120, lat=37.5), maptype='hybrid', zoom=6)
+ggmap(cali) +
+  geom_polygon(data=parks, aes(x=long, y=lat, group=group), colour='NA', fill='green', alpha=0.8)
 
 ############################### PRISM & RASTER ############################### 
 library(prism)
